@@ -9,9 +9,22 @@ interface Custom {
   dockerImage: string
   dockerTag: string
   dockerPath: string
+  libPath: string
 }
 
-const buildSteps = `export PUB_CACHE=/tmp; cd $(mktemp -d); cp -Rp /app/* .; /usr/lib/dart/bin/pub get; /usr/lib/dart/bin/dart2native lib/main.dart -o bootstrap; mv bootstrap /app/bootstrap;`
+function template(strings: any, ...keys: any) {
+  return function (...values: any) {
+    const dict = values[values.length - 1] || {}
+    const result = [strings[0]]
+    keys.forEach(function (key: any, i: number) {
+      const value = Number.isInteger(key) ? values[key] : dict[key]
+      result.push(value, strings[i + 1])
+    })
+    return result.join('')
+  }
+}
+
+const buildSteps = template`export PUB_CACHE=/tmp; cd $(mktemp -d); cp -Rp /app/* .; /usr/lib/dart/bin/pub get; /usr/lib/dart/bin/dart2native ${'libPath'}/${'script'}.dart -o bootstrap; mv bootstrap /target/${'script'};`
 
 class DartPlugin {
   private readonly runtime = 'dart'
@@ -22,6 +35,7 @@ class DartPlugin {
   public custom: Custom
   public srcPath: string
   public buildPath: string
+  public stagePath: string
 
   constructor(public serverless: Serverless, public options: Options) {
     this.servicePath = this.serverless.config.servicePath || ''
@@ -32,12 +46,14 @@ class DartPlugin {
       'before:offline:start:init': this.build.bind(this)
     }
     this.custom = {
-      ...{ dockerImage: 'google/dart', dockerTag: 'latest' },
+      ...{ dockerImage: 'google/dart', dockerTag: 'latest', libPath: 'lib' },
       ...this.serverless.service?.custom?.dart
     }
 
     this.srcPath = path.resolve(this.custom.dockerPath || this.servicePath)
-    this.buildPath = path.resolve(this.srcPath, 'build')
+    this.buildPath = path.resolve(this.srcPath, 'target')
+    this.stagePath = path.resolve(this.buildPath, this.options.stage || 'dev')
+
     const service = this.serverless.service as any
     service.package.excludeDevDependencies = false
   }
@@ -48,21 +64,28 @@ class DartPlugin {
       : this.serverless.service.getAllFunctions()
   }
 
-  public dockerBuildArgs() {
-    const defaultArgs = ['run', '-v', `${this.srcPath}:/app`, '-i']
+  public dockerBuildArgs(script: string) {
+    const defaultArgs = [
+      'run',
+      '-v',
+      `${this.srcPath}:/app`,
+      '-v',
+      `${this.stagePath}:/target`,
+      '-i'
+    ]
     const imageArgs = [
       `${this.custom.dockerImage}:${this.custom.dockerTag}`,
       'sh',
       '-c',
-      buildSteps
+      buildSteps({ ...this.custom, ...{ script } })
     ]
 
     return [...defaultArgs, ...imageArgs]
   }
 
-  public dockerBuild() {
+  public dockerBuild(script: string) {
     const cli = process.env['SLS_DOCKER_CLI'] || 'docker'
-    const args = [...this.dockerBuildArgs()]
+    const args = [...this.dockerBuildArgs(script)]
 
     this.serverless.cli.log(`Running containerized build ...`)
 
@@ -71,14 +94,26 @@ class DartPlugin {
     })
   }
 
+  public cleanup() {
+    return fs.rmdirSync(this.stagePath, { recursive: true })
+  }
+
+  public mkdir() {
+    return fs.mkdirSync(this.stagePath, { recursive: true })
+  }
+
   public run() {
     const service = this.serverless.service
 
+    this.cleanup() // first clean-up
+    this.mkdir() // mkdir
+
     return this.funcs().reduce((prev, curr) => {
       const func = service.getFunction(curr)
+      const [script] = func.handler.split('.')
       const runtime = func.runtime || service.provider.runtime
-      const bootstrap = path.resolve(this.srcPath, 'bootstrap')
-      const target = path.resolve(this.srcPath, 'bootstrap.zip')
+      const bootstrap = path.resolve(this.stagePath, `${script}`)
+      const artifact = path.resolve(this.stagePath, `${script}.zip`)
 
       if (runtime != this.runtime) {
         return prev || false
@@ -86,8 +121,8 @@ class DartPlugin {
 
       this.serverless.cli.log(`Building Dart ${func.handler} func...`)
 
-      if (!fs.existsSync(bootstrap)) {
-        const { error, status } = this.dockerBuild()
+      if (!fs.existsSync(artifact)) {
+        const { error, status } = this.dockerBuild(script)
         if (error || (status && status > 0)) {
           this.serverless.cli.log(
             `Dart build encountered an error: ${error} ${status}.`
@@ -96,7 +131,7 @@ class DartPlugin {
         }
 
         try {
-          this.package(bootstrap, target)
+          this.package(bootstrap, artifact)
         } catch (err) {
           this.serverless.cli.log(`Error zipping artifact ${err}`)
 
@@ -105,7 +140,7 @@ class DartPlugin {
       }
 
       func.package = func.package || {}
-      func.package.artifact = bootstrap
+      func.package.artifact = artifact
 
       return true
     }, false)

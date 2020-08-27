@@ -38,9 +38,12 @@ plugins:
 package:
   individually: true
 functions:
-  test:
-    # it is assumed that you deliver your handlers from package
-    handler: hello
+  hello:
+    # the first part of the handler refers to the script lib/main.dart.
+    # main.hello identifies the handler to execute in the Dart runtime.
+    # The runtime supports multiple handlers
+    # The plugin is smart to not rebuild those scripts with multiple handlers.
+    handler: main.hello
     events:
       - http:
           path: /hello
