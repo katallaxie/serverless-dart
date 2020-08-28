@@ -75,19 +75,19 @@ $ npx serverless deploy
 Clone the repository 
 
 ```bash 
-git clone https://github.com/katallaxie/serverless-dart
+$ git clone https://github.com/katallaxie/serverless-dart
 ```
 
 Link the package
 
 ```bash
-npm link
+$ npm link
 ```
 
 Link the package to your testing environment
 
 ```bash
-npm link serverless-dart
+$ npm link serverless-dart
 ```
 
 ## 📃 License
