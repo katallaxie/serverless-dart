@@ -26,7 +26,7 @@
 Install the plugin inside your serverless project with npm.
 
 ```sh
-$ npm i -D serverless-dart@next
+$ npm i -D serverless-dart
 ```
 
 💡 The `-D` flag adds it to your development dependencies in npm speak
