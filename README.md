@@ -10,6 +10,15 @@
    A ⚡ <a href="https://www.serverless.com/framework/docs/">Serverless framework</a> ⚡ plugin for <a href="https://dart.dev/">Dart</a> applications
 </p>
 
+<div align="center">
+  <a href="https://github.com/katallaxie/serverless-dart/actions">
+    <img alt="GitHub actions build badge" src="https://github.com/katallaxie/serverless-dart/workflows/Main/badge.svg"/>
+  </a>
+  <a href="https://www.npmjs.com/package/serverless-dart">
+    <img alt="npm release badge" src="https://img.shields.io/npm/v/serverless-dart.svg"/>
+  </a>
+</div>
+
 <br />
 
 ## 📦 Install
