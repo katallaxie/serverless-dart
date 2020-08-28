@@ -19,9 +19,10 @@ Install the plugin inside your serverless project with npm.
 ```sh
 $ npm i -D serverless-dart@next
 ```
-💡The `-D` flag adds it to your development dependencies in npm speak
 
-💡 This plugin assumes you are building Dart Lambdas targeting the AWS Lambda "provided" runtime. The [Dart Runtime for AWS Lambda](https://github.com/awslabs/aws-lambda-dart-runtime) makes this easy.
+💡 The `-D` flag adds it to your development dependencies in npm speak
+
+💡 This plugin assumes you are using [Dart Runtime for AWS Lambda](https://github.com/awslabs/aws-lambda-dart-runtime) coding your applications.
 
 Add the following to your serverless project's `serverless.yml` file
 
