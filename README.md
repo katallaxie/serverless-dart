@@ -58,6 +58,17 @@ The default behavior is to build your Lambda inside a Docker container. Make sur
 
 Every [serverless workflow command](https://serverless.com/framework/docs/providers/aws/guide/workflow/) should work out of the box.
 
+### package your Lambdas
+
+```sh
+$ npx serverless deploy
+```
+
+### deploy your Lambdas
+
+```sh
+$ npx serverless deploy
+```
 
 ## 👨‍💻 Development
 
@@ -74,7 +85,8 @@ npm link
 ```
 
 Link the package to your testing environment
-```
+
+```bash
 npm link serverless-dart
 ```
 
