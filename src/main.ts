@@ -4,6 +4,7 @@ import * as child from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
 import AdmZip from 'adm-zip'
+import { buildSteps } from './template'
 
 interface Custom {
   dockerImage: string
@@ -11,20 +12,6 @@ interface Custom {
   dockerPath: string
   libPath: string
 }
-
-function template(strings: any, ...keys: any) {
-  return function (...values: any) {
-    const dict = values[values.length - 1] || {}
-    const result = [strings[0]]
-    keys.forEach(function (key: any, i: number) {
-      const value = Number.isInteger(key) ? values[key] : dict[key]
-      result.push(value, strings[i + 1])
-    })
-    return result.join('')
-  }
-}
-
-const buildSteps = template`export PUB_CACHE=/tmp; cd $(mktemp -d); cp -Rp /app/* .; /usr/lib/dart/bin/pub get; /usr/lib/dart/bin/dart2native ${'libPath'}/${'script'}.dart -o bootstrap; mv bootstrap /target/${'script'};`
 
 class DartPlugin {
   private readonly runtime = 'dart'
@@ -46,7 +33,7 @@ class DartPlugin {
       'before:offline:start:init': this.build.bind(this)
     }
     this.custom = {
-      ...{ dockerImage: 'google/dart', dockerTag: 'latest', libPath: 'lib' },
+      ...{ dockerImage: 'google/dart', dockerTag: '2', libPath: 'lib' },
       ...this.serverless.service?.custom?.dart
     }
 
