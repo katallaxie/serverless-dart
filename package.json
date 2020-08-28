@@ -1,6 +1,6 @@
 {
   "name": "serverless-dart",
-  "version": "0.0.2-beta.5",
+  "version": "0.0.2-beta.6",
   "description": "Serverless framework plugin for Dart applications",
   "main": "lib/main.js",
   "scripts": {
