@@ -3,7 +3,7 @@ import * as process from 'process'
 import * as child from 'child_process'
 import * as path from 'path'
 import * as fs from 'fs'
-import AdmZip from 'adm-zip'
+import Yazl from 'yazl'
 import { buildSteps } from './template'
 
 interface Custom {
@@ -96,7 +96,9 @@ class DartPlugin {
     this.mkdir() // mkdir
 
     return this.funcs().reduce((prev, curr) => {
-      const func = service.getFunction(curr)
+      const func = service.getFunction(
+        curr
+      ) as Serverless.FunctionDefinitionHandler
       const [script] = func.handler.split('.')
       const runtime = func.runtime || service.provider.runtime
       const bootstrap = path.resolve(this.stagePath, `${script}`)
@@ -106,7 +108,7 @@ class DartPlugin {
         return prev || false
       }
 
-      this.serverless.cli.log(`Building Dart ${func.handler} func...`)
+      this.serverless.cli.log(`Building Dart ${func.name} func...`)
 
       if (!fs.existsSync(artifact)) {
         const { error, status } = this.dockerBuild(script)
@@ -118,14 +120,6 @@ class DartPlugin {
         }
 
         try {
-          fs.chmodSync(bootstrap, 0o755)
-        } catch(err) {
-          this.serverless.cli.log(`Error changing permission ${err}`)
-
-          throw new Error(err)
-        }
-
-        try {
           this.package(bootstrap, artifact)
         } catch (err) {
           this.serverless.cli.log(`Error zipping artifact ${err}`)
@@ -134,18 +128,24 @@ class DartPlugin {
         }
       }
 
-      func.package = func.package || {}
-      func.package.artifact = artifact
+      func.package = func.package || { include: [], exclude: [] }
+      func.package = { ...func?.package, artifact }
 
       return true
     }, false)
   }
 
-  public package(bootstrap: string, target: string) {
-    const zip = new AdmZip()
-    zip.addFile('bootstrap', fs.readFileSync(bootstrap), '', 755)
+  public async package(bootstrap: string, target: string) {
+    const zipFile = new Yazl.ZipFile()
+    const output = fs.createWriteStream(target)
 
-    return fs.writeFileSync(target, zip.toBuffer())
+    output.on('error', function (err) {
+      throw err
+    })
+
+    zipFile.addFile(bootstrap, 'bootstrap', { mode: 0o755, compress: false })
+    zipFile.outputStream.pipe(output)
+    zipFile.end()
   }
 
   public build() {
