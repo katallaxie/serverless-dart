@@ -118,6 +118,14 @@ class DartPlugin {
         }
 
         try {
+          fs.chmodSync(bootstrap, 0o755)
+        } catch(err) {
+          this.serverless.cli.log(`Error changing permission ${err}`)
+
+          throw new Error(err)
+        }
+
+        try {
           this.package(bootstrap, artifact)
         } catch (err) {
           this.serverless.cli.log(`Error zipping artifact ${err}`)
