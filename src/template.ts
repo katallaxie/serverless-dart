@@ -10,4 +10,4 @@ function template(strings: any, ...keys: any) {
   }
 }
 
-export const buildSteps = template`cd $(mktemp -d); cp -Rp /app/* .; /usr/lib/dart/bin/pub get; /usr/lib/dart/bin/dart2native ${'libPath'}/${'script'}.dart -o bootstrap; mv bootstrap /target/${'script'};`
+export const buildSteps = template`cd $(mktemp -d); cp -Rp /app/* .; /usr/lib/dart/bin/pub get; /usr/lib/dart/bin/dart compile exe ${'libPath'}/${'script'}.dart -o bootstrap; mv bootstrap /target/${'script'};`
