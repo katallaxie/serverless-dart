@@ -60,7 +60,7 @@ functions:
           method: GET
 ```
 
-> 💡 The Dart Runtime for AWS Lambda requires a binary named `bootstrap`. This plugin renames the binary `dart2native` builds to `bootstrap` for you and zips that file.
+> 💡 The Dart Runtime for AWS Lambda requires a binary named `bootstrap`. This plugin renames the binary that is generated to `bootstrap` for you and zips that file.
 
 The default behavior is to build your Lambda inside a Docker container. Make sure you [get Docker](https://docs.docker.com/get-docker/).
 
