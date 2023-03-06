@@ -33,7 +33,7 @@ class DartPlugin {
       'before:offline:start:init': this.build.bind(this)
     }
     this.custom = {
-      ...{ dockerImage: 'google/dart', dockerTag: 'latest', libPath: 'lib' },
+      ...{ dockerImage: 'dart', dockerTag: 'latest', libPath: 'lib' },
       ...this.serverless.service?.custom?.dart
     }
 
